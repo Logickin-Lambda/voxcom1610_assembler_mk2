@@ -1,4 +1,5 @@
 const std = @import("std");
+const nfd = @import("nfd");
 
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
@@ -14,4 +15,9 @@ pub fn main() !void {
     try stdout.print("Run `zig build test` to run the tests.\n", .{});
 
     try bw.flush(); // don't forget to flush!
+
+    const path_opt = try nfd.openFileDialog("txt", null);
+    if (path_opt) |path| {
+        defer nfd.freePath(path);
+    }
 }
