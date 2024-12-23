@@ -1,5 +1,7 @@
 const std = @import("std");
 const nfd = @import("nfd");
+const string = @import("string").String;
+const cls = @import("models/CodeLineSegment.zig");
 
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
@@ -9,4 +11,10 @@ pub fn main() !void {
     if (path_opt) |path| {
         defer nfd.freePath(path);
     }
+}
+
+test {
+    _ = cls.CodeLineSegment();
+
+    std.testing.refAllDecls(@This());
 }

@@ -1,3 +1,4 @@
+const std = @import("std");
 /// Here are all of the available opcodes in VOXCOM 1610:
 /// It use 5 bits as opcode, and the remaining 11 bits for operands
 ///
@@ -50,36 +51,83 @@
 ///
 /// -- End
 /// 11 111 xxx xxxxxxxx  Halt the program
-pub const Opcodes = enum(u8) {
-    NOP = 0b00_000_000,
-    NAND = 0b00_001_000,
-    LS = 0b00_010_000,
-    LSW = 0b00_010_010,
-    RS = 0b00_011_000,
-    RSW = 0b00_011_010,
-    ADD = 0b00_100_000,
-    ADDC = 0b00_100_100,
-    TCOM = 0b00_110_000,
-    BSWP = 0b00_111_000,
-    MOV = 0b01_000_000, // Includes all addressing mode
-    STPG = 0b10_010_000,
-    ROMA = 0b10_011_000,
-    PORT = 0b10_100_000,
-    JMP = 0b11_000_000,
-    JMPR = 0b11_001_000,
-    JCR = 0b11_010_100,
-    JOV = 0b11_010_010,
-    JEVN = 0b11_010_001,
-    JLZ = 0b11_011_100,
-    JLEZ = 0b11_011_110,
-    JEZ = 0b11_011_010,
-    JNZ = 0b11_011_101,
-    JGZ = 0b11_011_001,
-    JGEZ = 0b11_011_011,
-    END = 0b11_111_000,
+pub const NOP = "NOP"; // 0b00_000_000,
+pub const NAND = "NAND"; // 0b00_001_000,
+pub const LS = "LS"; // 0b00_010_000,
+pub const LSW = "LSW"; // 0b00_010_010,
+pub const RS = "RS"; // 0b00_011_000,
+pub const RSW = "RSW"; // 0b00_011_010,
+pub const ADD = "ADD"; // 0b00_100_000,
+pub const ADDC = "ADDC"; // 0b00_100_100,
+pub const TCOM = "TCOM"; // 0b00_110_000,
+pub const BSWP = "BSWP"; // 0b00_111_000,
+pub const MOV = "MOV"; // 0b01_000_000, // Includes all addressing mode
+pub const STPG = "STPG"; // 0b10_010_000,
+pub const ROMA = "ROMA"; // 0b10_011_000,
+pub const PORT = "PORT"; // 0b10_100_000,
+pub const JMP = "JMP"; // 0b11_000_000,
+pub const JMPR = "JMPR"; // 0b11_001_000,
+pub const JCR = "JCR"; // 0b11_010_100,
+pub const JOV = "JOV"; // 0b11_010_010,
+pub const JEVN = "JEVN"; // 0b11_010_001,
+pub const JLZ = "JLZ"; // 0b11_011_100,
+pub const JLEZ = "JLEZ"; // 0b11_011_110,
+pub const JEZ = "JEZ"; // 0b11_011_010,
+pub const JNZ = "JNZ"; // 0b11_011_101,
+pub const JGZ = "JGZ"; // 0b11_011_001,
+pub const JGEZ = "JGEZ"; // 0b11_011_011,
+pub const END = "END"; // 0b11_111_000,
+pub const NOTEY = "NOTEY"; // 0b00_000_000,
+pub const RAMPAGE = "RAMPAGE"; // 0b10_010_000,
+
+const slice = [_]struct { []const u8, u8 }{
+    .{ NOP, 0b00_000_000 },
+    .{ NOTEY, 0b00_000_000 },
+    .{ NAND, 0b00_001_000 },
+    .{ LS, 0b00_010_000 },
+    .{ LSW, 0b00_010_010 },
+    .{ RS, 0b00_011_000 },
+    .{ RSW, 0b00_011_010 },
+    .{ ADD, 0b00_100_000 },
+    .{ ADDC, 0b00_100_100 },
+    .{ TCOM, 0b00_110_000 },
+    .{ BSWP, 0b00_111_000 },
+    .{ MOV, 0b01_000_000 },
+    .{ STPG, 0b10_010_000 },
+    .{ RAMPAGE, 0b10_010_000 },
+    .{ ROMA, 0b10_011_000 },
+    .{ PORT, 0b10_100_000 },
+    .{ JMP, 0b11_000_000 },
+    .{ JMPR, 0b11_001_000 },
+    .{ JCR, 0b11_010_100 },
+    .{ JOV, 0b11_010_010 },
+    .{ JEVN, 0b11_010_001 },
+    .{ JLZ, 0b11_011_100 },
+    .{ JLEZ, 0b11_011_110 },
+    .{ JEZ, 0b11_011_010 },
+    .{ JNZ, 0b11_011_101 },
+    .{ JGZ, 0b11_011_001 },
+    .{ END, 0b11_111_000 },
 };
 
-pub const OpcodesEasterEgg = enum(u8) {
-    NOTEY = 0b00_000_000,
-    RAMPAGE = 0b10_010_000,
-};
+pub const lkup = std.StaticStringMap(u8).initComptime(slice);
+
+pub fn contains(code_fragment: []u8) ?u8 {
+    const opcode_opt = lkup.get(code_fragment);
+
+    if (opcode_opt) |opcode| {
+        return opcode;
+    } else {
+        return null;
+    }
+}
+
+test "opcode lookup initialization" {
+    var opcodeA = [3]u8{ 'A', 'D', 'D' };
+    const sliceA = opcodeA[0..opcodeA.len];
+    try std.testing.expectEqual(0b00_100_000, contains(sliceA));
+
+    var opcodeB = [4]u8{ 'A', 'D', 'H', 'D' };
+    const sliceB = opcodeB[0..opcodeB.len];
+    try std.testing.expectEqual(null, contains(sliceB));
+}

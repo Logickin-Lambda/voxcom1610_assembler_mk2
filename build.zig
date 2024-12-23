@@ -41,6 +41,12 @@ pub fn build(b: *std.Build) void {
         else => @panic("unsupported OS"),
     }
 
+    // String library
+    const string = b.dependency("string", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     // This declares intent for the library to be installed into the standard
     // location when the user invokes the "install" step (the default step when
     // running `zig build`).
@@ -52,6 +58,7 @@ pub fn build(b: *std.Build) void {
     });
     exe.addIncludePath(.{ .cwd_relative = "lib/nfd/include" });
     exe.root_module.addImport("nfd", nfd_mod);
+    exe.root_module.addImport("string", string.module("string"));
     exe.linkLibC();
 
     b.installArtifact(exe);
@@ -69,6 +76,10 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    exe_unit_tests.addIncludePath(.{ .cwd_relative = "lib/nfd/include" });
+    exe_unit_tests.root_module.addImport("nfd", nfd_mod);
+    exe_unit_tests.root_module.addImport("string", string.module("string"));
+    exe_unit_tests.linkLibC();
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     const test_step = b.step("test", "Run unit tests");
