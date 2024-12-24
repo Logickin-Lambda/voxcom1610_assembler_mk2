@@ -2,6 +2,7 @@ const std = @import("std");
 const nfd = @import("nfd");
 const string = @import("string").String;
 const cls = @import("models/CodeLineSegment.zig");
+const fl = @import("process/FileLoader.zig");
 
 pub fn main() !void {
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
@@ -15,6 +16,7 @@ pub fn main() !void {
 
 test {
     _ = cls.CodeLineSegment();
+    _ = fl.FileLoader();
 
     std.testing.refAllDecls(@This());
 }

@@ -13,7 +13,7 @@ pub fn CodeLineSegment() type {
         operands: std.ArrayList(String), // the properties for the opcode
         postlabel: ?String, // the labels that is going to jump into
         file_ref_index: u32, // index of the file, used for error prompting
-        compile_index: u32, // index of the compiled program, used for generate machine codes
+        compile_index: u32, // index of the compiled program, used for generating machine codes
         allocator: std.mem.Allocator,
 
         pub fn init(allocator: std.mem.Allocator) Self {
@@ -68,7 +68,8 @@ pub fn CodeLineSegment() type {
             var raw_cloned = try self.raw_code_line.?.clone();
             defer raw_cloned.deinit();
             _ = try raw_cloned.replace(",", " ");
-            _ = try raw_cloned.replace("\t", "");
+            _ = try raw_cloned.replace("\t", " ");
+            _ = try raw_cloned.replace("\r", " ");
 
             const split_raw_cloned = try raw_cloned.splitAll(" ");
             var found_opcode = false;
@@ -210,7 +211,7 @@ test "Code Line Segment - Jump With Label" {
 }
 
 test "Code Line Segment - Complex" {
-    var command = try String.init_with_contents(std.testing.allocator, "TEST3: TEST4: MOV  AB \t R7   \t\t  R7");
+    var command = try String.init_with_contents(std.testing.allocator, "TEST3:\tTEST4:\tMOV  AB \t R7   \t\t  R7");
     defer command.deinit();
 
     var line = CodeLineSegment().init(std.testing.allocator);
@@ -228,4 +229,36 @@ test "Code Line Segment - Complex" {
     try std.testing.expectEqualStrings("AB", line.operands.items[0].str());
     try std.testing.expectEqualStrings("R7", line.operands.items[1].str());
     try std.testing.expectEqualStrings("R7", line.operands.items[2].str());
+}
+
+test "Code Line Segment - Binary Number" {
+    var command = try String.init_with_contents(std.testing.allocator, "ADD\t\tA  0B00_0001_0100");
+    defer command.deinit();
+
+    var line = CodeLineSegment().init(std.testing.allocator);
+    defer line.deinit();
+
+    try line.loadRawCodeLine(command, 3, 4);
+    try line.splitCodes();
+
+    try std.testing.expectEqualStrings("ADD", line.opcode.?.str());
+    try std.testing.expectEqual(2, line.operands.items.len);
+    try std.testing.expectEqualStrings("A", line.operands.items[0].str());
+    try std.testing.expectEqualStrings("0B00_0001_0100", line.operands.items[1].str());
+}
+
+test "Code Line Segment - Hex Number" {
+    var command = try String.init_with_contents(std.testing.allocator, "ADD  A\t\t0X28");
+    defer command.deinit();
+
+    var line = CodeLineSegment().init(std.testing.allocator);
+    defer line.deinit();
+
+    try line.loadRawCodeLine(command, 3, 4);
+    try line.splitCodes();
+
+    try std.testing.expectEqualStrings("ADD", line.opcode.?.str());
+    try std.testing.expectEqual(2, line.operands.items.len);
+    try std.testing.expectEqualStrings("A", line.operands.items[0].str());
+    try std.testing.expectEqualStrings("0X28", line.operands.items[1].str());
 }
