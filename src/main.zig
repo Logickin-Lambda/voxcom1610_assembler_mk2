@@ -1,7 +1,7 @@
 const std = @import("std");
 const nfd = @import("nfd");
 const string = @import("string").String;
-const sv = @import("process/Sunvox.zig ");
+const sv = @import("process/Sunvox.zig");
 
 // these are for the testing purposes
 const cls = @import("models/CodeLineSegment.zig");
@@ -19,11 +19,11 @@ pub fn main() !void {
         defer nfd.freePath(path);
 
         _ = try sv.init(0, 44100, 2, 0);
-        try sv.open_slot(0);
+        try sv.openSlot(0);
         try sv.load(0, path);
-        try sv.play_from_Beginning(0);
+        try sv.playFromBeginning(0);
 
-        while (!sv.end_of_song(0)) {
+        while (!sv.endOfSong(0)) {
             std.time.sleep(1000 * 1000 * 1000);
         }
     }
