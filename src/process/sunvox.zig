@@ -98,6 +98,12 @@ pub fn openSlot(slot_id: i4) !void {
     if (status < 0) return SV_ERR.FAILED_TO_CREATE_NEW_SLOT;
 }
 
+pub fn closeSlot(slot_id: i4) !void {
+    const status = sv.sv_close_slot.?(@as(c_int, slot_id));
+
+    if (status < 0) return SV_ERR.FAILED_TO_CREATE_NEW_SLOT;
+}
+
 pub fn load(slot_id: i4, file_name: [*c]const u8) !void {
     const status = sv.sv_load.?(@as(c_int, slot_id), file_name);
 

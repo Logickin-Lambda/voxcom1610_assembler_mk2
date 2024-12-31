@@ -31,11 +31,11 @@ pub fn VOXCOMMachineCode() type {
         //     self.raw_code_line.deinit();
         // }
 
-        fn highByteToCtrl(self: *Self) c_int {
+        pub fn highByteToCtrl(self: *Self) c_int {
             return @as(c_int, @intCast(self.high_byte)) * SUNVOX_CTRL_MULTIPLIER;
         }
 
-        fn lowByteToCtrl(self: *Self) c_int {
+        pub fn lowByteToCtrl(self: *Self) c_int {
             return @as(c_int, @intCast(self.low_byte)) * SUNVOX_CTRL_MULTIPLIER;
         }
     };

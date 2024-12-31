@@ -22,12 +22,12 @@ pub fn Compiler() type {
         const Self = @This();
         // we don't need a copy for the CodeLineSegment because it is read only,
         // so I decided to pass a reference rather than the whole object.
-        source_codes: *std.ArrayList(cls.CodeLineSegment()),
+        source_codes: *std.ArrayList(?cls.CodeLineSegment()),
         compiled_programs: std.ArrayList(mxhc.VOXCOMMachineCode()),
         label_lkup: std.StringHashMap(u32),
         allocator: std.mem.Allocator,
 
-        pub fn init(allocator: std.mem.Allocator, source_codes: *std.ArrayList(cls.CodeLineSegment())) Self {
+        pub fn init(allocator: std.mem.Allocator, source_codes: *std.ArrayList(?cls.CodeLineSegment())) Self {
             return Self{
                 .allocator = allocator,
                 .compiled_programs = std.ArrayList(mxhc.VOXCOMMachineCode()).init(allocator),
@@ -46,9 +46,11 @@ pub fn Compiler() type {
 
             var compileResult = true;
 
-            for (self.source_codes.items) |code_line| {
-                if (self.translateCodeLine(code_line)) continue else |_| {
-                    compileResult = false;
+            for (self.source_codes.items) |code_line_opt| {
+                if (code_line_opt) |code_line| {
+                    if (self.translateCodeLine(code_line)) continue else |_| {
+                        compileResult = false;
+                    }
                 }
             }
         }
@@ -473,23 +475,25 @@ pub fn Compiler() type {
         }
 
         fn generateLabelLkup(self: *Self) !void {
-            for (self.source_codes.items) |code_line_segements| {
-                for (code_line_segements.prelabels.items) |prelabel| {
+            for (self.source_codes.items) |code_line_segements_opt| {
+                if (code_line_segements_opt) |code_line_segements| {
+                    for (code_line_segements.prelabels.items) |prelabel| {
 
-                    // remove the colon for the lookup
-                    // Every labels must end with a colon, so this can used for detect
-                    // if the line contains a mistyped opcode
-                    var prelabel_clone: String = try prelabel.clone();
-                    _ = try prelabel_clone.replace(":", "");
+                        // remove the colon for the lookup
+                        // Every labels must end with a colon, so this can used for detect
+                        // if the line contains a mistyped opcode
+                        var prelabel_clone: String = try prelabel.clone();
+                        _ = try prelabel_clone.replace(":", "");
 
-                    if (prelabel_clone.isEmpty()) return;
+                        if (prelabel_clone.isEmpty()) return;
 
-                    // throws an error there is a duplicated labels
-                    if (self.label_lkup.contains(prelabel_clone.str())) {
-                        std.log.err("Duplicated label found: {s} at line {d}: {s}\n", .{ prelabel_clone.str(), code_line_segements.file_ref_index, code_line_segements.raw_code_line.?.str() });
-                        return COMPILER_ERR.DUPLICATED_LABELS;
-                    } else {
-                        try self.label_lkup.put(prelabel_clone.str(), code_line_segements.compile_index);
+                        // throws an error there is a duplicated labels
+                        if (self.label_lkup.contains(prelabel_clone.str())) {
+                            std.log.err("Duplicated label found: {s} at line {d}: {s}\n", .{ prelabel_clone.str(), code_line_segements.file_ref_index, code_line_segements.raw_code_line.?.str() });
+                            return COMPILER_ERR.DUPLICATED_LABELS;
+                        } else {
+                            try self.label_lkup.put(prelabel_clone.str(), code_line_segements.compile_index);
+                        }
                     }
                 }
             }
@@ -512,24 +516,26 @@ test "Compilier Init test" {
     try line1.loadRawCodeLine(line1_raw, 0, 0);
     try line1.splitCodes();
 
-    var source_code = std.ArrayList(cls.CodeLineSegment()).init(arena.allocator());
+    var source_code = std.ArrayList(?cls.CodeLineSegment()).init(arena.allocator());
     defer source_code.deinit();
 
-    try source_code.append(line1);
+    const line1_opt: ?cls.CodeLineSegment() = line1;
+
+    try source_code.append(line1_opt);
 
     // Test starts from here
     var compiler = Compiler().init(arena.allocator(), &source_code);
     defer compiler.deinit();
 }
 
-fn generateSource(allocator: std.mem.Allocator, assembly_lines: []String) !std.ArrayList(cls.CodeLineSegment()) {
-    var source_code = std.ArrayList(cls.CodeLineSegment()).init(allocator);
+fn generateSource(allocator: std.mem.Allocator, assembly_lines: []String) !std.ArrayList(?cls.CodeLineSegment()) {
+    var source_code = std.ArrayList(?cls.CodeLineSegment()).init(allocator);
 
     for (0..assembly_lines.len) |i| {
-        var code_line_seg = cls.CodeLineSegment().init(allocator);
+        var code_line_seg: ?cls.CodeLineSegment() = cls.CodeLineSegment().init(allocator);
 
-        try code_line_seg.loadRawCodeLine(assembly_lines[i], @as(u32, @intCast(i)), @as(u32, @intCast(i)));
-        try code_line_seg.splitCodes();
+        try code_line_seg.?.loadRawCodeLine(assembly_lines[i], @as(u32, @intCast(i)), @as(u32, @intCast(i)));
+        try code_line_seg.?.splitCodes();
 
         try source_code.append(code_line_seg);
     }
