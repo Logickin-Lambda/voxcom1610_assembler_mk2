@@ -5,6 +5,7 @@ const sv = @import("process/Sunvox.zig");
 const fl = @import("process/FileLoader.zig");
 const cpl = @import("process/Compiler.zig");
 const rom = @import("process/VoxcomBasicTemplateRomBuilder.zig");
+const exp = @import("process/VoxcomProgramExporter.zig");
 
 // these are for the testing purposes
 const cls = @import("models/CodeLineSegment.zig");
@@ -32,8 +33,12 @@ pub fn main() !void {
         try compiler.compile();
 
         var rom_export = try rom.RomGenerator().init(arena.allocator(), &compiler.compiled_programs);
-
         try rom_export.generate();
+        try rom_export.deinit();
+
+        var exporter = try exp.Exporter().init(arena.allocator());
+        try exporter.constructRomBank();
+        try exporter.deinit();
 
         // _ = try sv.init(0, 44100, 2, 0);
         // try sv.openSlot(0);
@@ -43,8 +48,6 @@ pub fn main() !void {
         // while (!sv.endOfSong(0)) {
         //     std.time.sleep(1000 * 1000 * 1000);
         // }
-
-        try rom_export.deinit();
     }
 }
 

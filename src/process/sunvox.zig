@@ -1,5 +1,5 @@
 // test
-
+const std = @import("std");
 const sv = @cImport({
     @cDefine("SUNVOX_MAIN", {});
     @cInclude("../../sunvox/sunvox.h");
@@ -137,13 +137,13 @@ pub fn endOfSong(slot_id: i4) bool {
 pub fn lockSlot(slot_id: i4) !void {
     const status = sv.sv_lock_slot.?(@as(c_int, slot_id));
 
-    if (status < 0) return SV_ERR.FAILED_TO_LOAD_PROJECT;
+    if (status < 0) return SV_ERR.FAILED_TO_LOCK_SLOT;
 }
 
 pub fn unlockSlot(slot_id: i4) !void {
     const status = sv.sv_unlock_slot.?(@as(c_int, slot_id));
 
-    if (status < 0) return SV_ERR.FAILED_TO_LOAD_PROJECT;
+    if (status < 0) return SV_ERR.FAILED_TO_UNLOCK_SLOT;
 }
 
 pub fn newModule(slot_id: i4, module_type: [*c]const u8, name: [*c]const u8, x: i32, y: i32, z: i32) !u32 {
@@ -164,10 +164,10 @@ pub fn disconnectConnectModule(slot_id: i4, source: i32, destination: i32) !void
     if (status < 0) return SV_ERR.FAILED_TO_MODIFY_CONNECTION;
 }
 
-pub fn loadModule(slot_id: i4, fileName: [*c]const u8, x: i32, y: i32, z: i32) !void {
-    const module_id = sv.sv_load_module.?(@as(c_int, slot_id), fileName, @as(c_int, x), @as(c_int, y), @as(c_int, z));
+pub fn loadModule(slot_id: i4, file_name: [*c]const u8, x: i32, y: i32, z: i32) !i32 {
+    const module_id = sv.sv_load_module.?(@as(c_int, slot_id), file_name, @as(c_int, x), @as(c_int, y), @as(c_int, z));
 
-    if (module_id == 0) return module_id else return SV_ERR.FAILED_TO_LOAD_MODULE;
+    if (module_id >= 0) return @as(i32, module_id) else return SV_ERR.FAILED_TO_LOAD_MODULE;
 }
 
 pub fn metamoduleLoad(slot_id: i4, module_id: i32, fileName: [*c]const u8) !void {
@@ -232,4 +232,29 @@ pub fn getPatternEvent(
     );
 
     return if (data >= 0) @as(i32, column) else SV_ERR.FAILED_TO_ACCESS_EVENT;
+}
+
+pub fn setModuleCtlValue(slot_id: i4, module_id: i32, ctl: i32, ctl_val: i32, scale: i32) !void {
+    const status = sv.sv_set_module_ctl_value.?(
+        @as(c_int, slot_id),
+        @as(c_int, module_id),
+        @as(c_int, ctl),
+        @as(c_int, ctl_val),
+        @as(c_int, scale),
+    );
+
+    if (status < 0) return SV_ERR.FAILED_TO_ACCESS_EVENT;
+}
+
+pub fn getModuleCtlValue(slot_id: i4, module_id: i32, ctl: i32, scale: i32) i32 {
+    const status = sv.sv_get_module_ctl_value.?(
+        @as(c_int, slot_id),
+        @as(c_int, module_id),
+        @as(c_int, ctl),
+        @as(c_int, scale),
+    );
+
+    std.log.info("CURRENT Value: {d}", .{status});
+
+    return status;
 }
