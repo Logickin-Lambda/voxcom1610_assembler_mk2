@@ -254,7 +254,5 @@ pub fn getModuleCtlValue(slot_id: i4, module_id: i32, ctl: i32, scale: i32) i32 
         @as(c_int, scale),
     );
 
-    std.log.info("CURRENT Value: {d}", .{status});
-
     return status;
 }

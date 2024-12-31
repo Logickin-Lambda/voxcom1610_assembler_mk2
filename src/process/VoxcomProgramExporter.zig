@@ -128,7 +128,6 @@ pub fn Exporter() type {
             const rom_module_id = try sv.loadModule(0, "resources/Rom Chip/[4] Rom Chip [5].sunsynth", rom_x, input_y, 0);
             try sv.connectModule(0, sound2ctl_module_id, rom_module_id);
             try sv.connectModule(0, MOD_ROM_TRIGGER, rom_module_id);
-            std.debug.print("ROM file path: {s}\n", .{rom_file_path});
             try sv.metamoduleLoad(0, rom_module_id, @as([*c]const u8, @ptrCast(rom_file_path)));
 
             // output transistor
