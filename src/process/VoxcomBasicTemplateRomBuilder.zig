@@ -38,6 +38,10 @@ pub fn RomGenerator() type {
         }
 
         pub fn generate(self: *Self) !void {
+
+            // delete all the temporary folder before working generate new ROM Files
+            try self.deleteTempRomFiles();
+
             // calculate the number of modules required for the program
             const program_size = self.compiled_programs.items.len;
             if (program_size > 65536) {
@@ -50,6 +54,18 @@ pub fn RomGenerator() type {
 
             for (0..memory_slot_count) |i| {
                 try self.generatePartition(i);
+            }
+        }
+
+        fn deleteTempRomFiles(self: *Self) !void {
+            const resource_root_path = "resources/temp/";
+            var dir = try std.fs.cwd().openDir(resource_root_path, .{ .iterate = true });
+            var walker = try dir.walk(self.allocator);
+            defer walker.deinit();
+
+            // construct Memory Bank
+            while (try walker.next()) |e| {
+                try dir.deleteFile(e.path);
             }
         }
 

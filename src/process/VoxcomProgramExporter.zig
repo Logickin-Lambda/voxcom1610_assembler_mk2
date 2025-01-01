@@ -162,7 +162,7 @@ pub fn Exporter() type {
             try sv.connectModule(0, neg_detector_module_id, not_gate_module_id);
 
             // connect the output of the decoder into the input of the ROM transistor, two ROM at a time
-            const is_lone_tail = if (decoder_index * 2 > self.rom_struct_input_ports.items.len) true else false;
+            const is_lone_tail = if ((decoder_index + 1) * 2 > self.rom_struct_input_ports.items.len) true else false;
 
             try sv.connectModule(0, not_gate_module_id, self.rom_struct_input_ports.items[decoder_index * 2]);
             if (!is_lone_tail) try sv.connectModule(0, not_gate_module_id, self.rom_struct_input_ports.items[decoder_index * 2 + 1]);
